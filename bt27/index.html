@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Game ghép đôi thẻ - Memory Card Flip Game">
+    <title>Memory Card Flip Game</title>
+
+    <!-- ===== CSS GỘP ===== -->
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: #ffffff;
+            --card-back: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --text-color: #1f2937;
+            --text-light: #6b7280;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.2);
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: var(--text-color);
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .game-header h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+        }
+
+        .game-subtitle {
+            color: var(--text-light);
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: #f3f4f6;
+            padding: 15px 25px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+            perspective: 1000px;
+        }
+
+        .card {
+            aspect-ratio: 3/4;
+            cursor: pointer;
+        }
+
+        .card.flipped .card-inner,
+        .card.matched .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            position: relative;
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: var(--border-radius);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backface-visibility: hidden;
+            font-size: 3rem;
+        }
+
+        .card-back {
+            background: var(--card-back);
+            color: white;
+        }
+
+        .card-back::before {
+            content: "?";
+            font-size: 3rem;
+        }
+
+        .card-front {
+            background: white;
+            transform: rotateY(180deg);
+            border: 3px solid var(--primary-color);
+        }
+
+        .game-controls {
+            text-align: center;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border-radius: var(--border-radius);
+            border: none;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .game-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+<main class="game-container">
+    <header class="game-header">
+        <h1>🎮 Memory Card Flip Game</h1>
+        <p class="game-subtitle">Tìm các cặp thẻ giống nhau!</p>
+    </header>
+
+    <section class="game-stats">
+        <div class="stat-item">Số lượt: <span id="moves">0</span></div>
+        <div class="stat-item">Cặp: <span id="pairs">0/8</span></div>
+        <div class="stat-item">Thời gian: <span id="time">00:00</span></div>
+    </section>
+
+    <section class="game-board" id="gameBoard"></section>
+
+    <footer class="game-controls">
+        <button class="btn" id="resetBtn">🔄 Chơi lại</button>
+    </footer>
+</main>
+
+<div class="modal" id="victoryModal">
+    <div class="modal-content">
+        <h2>🎉 Chúc mừng!</h2>
+        <p>Số lượt: <strong id="finalMoves"></strong></p>
+        <p>Thời gian: <strong id="finalTime"></strong></p>
+        <button class="btn" id="playAgainBtn">Chơi lại</button>
+    </div>
+</div>
+
+<!-- ===== JS GỘP ===== -->
+<script>
+const icons = ['🎮','🎯','🎲','🎪','🎨','🎭','🎸','🎺'];
+let cards = [];
+let flipped = [];
+let moves = 0;
+let matched = 0;
+let seconds = 0;
+let timer = null;
+
+const board = document.getElementById('gameBoard');
+const movesEl = document.getElementById('moves');
+const pairsEl = document.getElementById('pairs');
+const timeEl = document.getElementById('time');
+const modal = document.getElementById('victoryModal');
+
+function startGame() {
+    board.innerHTML = '';
+    cards = [...icons, ...icons].sort(() => Math.random() - 0.5);
+    flipped = [];
+    moves = 0;
+    matched = 0;
+    seconds = 0;
+    clearInterval(timer);
+    timer = setInterval(() => {
+        seconds++;
+        const m = String(Math.floor(seconds / 60)).padStart(2,'0');
+        const s = String(seconds % 60).padStart(2,'0');
+        timeEl.textContent = `${m}:${s}`;
+    },1000);
+
+    cards.forEach(icon => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <div class="card-inner">
+                <div class="card-back"></div>
+                <div class="card-front">${icon}</div>
+            </div>`;
+        card.onclick = () => flipCard(card, icon);
+        board.appendChild(card);
+    });
+
+    updateStats();
+    modal.classList.remove('active');
+}
+
+function flipCard(card, icon) {
+    if (flipped.length === 2 || card.classList.contains('flipped')) return;
+    card.classList.add('flipped');
+    flipped.push({card, icon});
+
+    if (flipped.length === 2) {
+        moves++;
+        updateStats();
+        setTimeout(checkMatch, 800);
+    }
+}
+
+function checkMatch() {
+    const [a,b] = flipped;
+    if (a.icon === b.icon) {
+        matched++;
+        if (matched === icons.length) winGame();
+    } else {
+        a.card.classList.remove('flipped');
+        b.card.classList.remove('flipped');
+    }
+    flipped = [];
+    updateStats();
+}
+
+function updateStats() {
+    movesEl.textContent = moves;
+    pairsEl.textContent = `${matched}/${icons.length}`;
+}
+
+function winGame() {
+    clearInterval(timer);
+    document.getElementById('finalMoves').textContent = moves;
+    document.getElementById('finalTime').textContent = timeEl.textContent;
+    modal.classList.add('active');
+}
+
+document.getElementById('resetBtn').onclick = startGame;
+document.getElementById('playAgainBtn').onclick = startGame;
+
+startGame();
+</script>
+</body>
+</html>

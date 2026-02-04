@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bài tập 01 - Danh sách sản phẩm</title>
+  <style>
+    :root{ --brand:#0b5ed7; --border:#e5e7eb; --muted:#6b7280; --bg:#f5f7fb; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family: Arial, Helvetica, sans-serif; background:var(--bg); }
+    .wrap{ max-width: 1100px; margin: 0 auto; padding: 18px; }
+    .menu{
+      background: var(--brand); border-radius: 12px; overflow:hidden; margin: 18px 0;
+    }
+    .menu a{ color:#fff; text-decoration:none; font-weight:700; padding:12px 14px; display:inline-block; }
+    .menu a:hover{ background:#084298; }
+    .card{
+      background:#fff; border:1px solid var(--border); border-radius:12px;
+      padding: 18px; box-shadow: 0 6px 16px rgba(0,0,0,.05);
+    }
+    .toolbar{ display:flex; gap: 12px; align-items:center; flex-wrap:wrap; margin-top: 10px; }
+    input[type="text"]{
+      flex: 1;
+      min-width: 240px;
+      padding: 12px;
+      border:1px solid var(--border);
+      border-radius: 10px;
+      font-size: 16px;
+      outline: none;
+    }
+    input[type="text"]:focus{ border-color: var(--brand); }
+    .hint{ color: var(--muted); font-size: 14px; }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .product{
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      background: #fff;
+    }
+    .product h3{ margin:0 0 6px 0; }
+    .price{ font-weight:800; }
+    .tag{
+      display:inline-block; font-size: 12px; padding: 4px 8px; border-radius: 999px;
+      background:#e8f0ff; color:#1e40af; font-weight:700;
+    }
+    .empty{
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px dashed #ef4444;
+      color: #b91c1c;
+      border-radius: 12px;
+      background: #fff;
+    }
+    .logic{
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      color:#111827;
+    }
+    code{ background:#f3f4f6; padding:2px 6px; border-radius:6px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="menu">
+      <a href="index.html">Trang chủ</a>
+      <a href="baitap01.html">Bài 01</a>
+      <a href="baitap02.html">Bài 02</a>
+      <a href="baitap03.html">Bài 03</a>
+      <a href="baitap14.html">Bài 14</a>
+    </div>
+
+    <section class="card">
+      <h1 style="margin:0;">Bài tập 01: Danh sách sản phẩm + Tìm kiếm</h1>
+      <div class="toolbar">
+        <input id="q" type="text" placeholder="Nhập tên sản phẩm (không phân biệt hoa thường)..." autocomplete="off" />
+        <span class="hint">Ví dụ: <code>iphone</code>, <code>mac</code>, <code>galaxy</code></span>
+      </div>
+
+      <div id="resultInfo" class="hint" style="margin-top:10px;"></div>
+      <div id="list" class="grid"></div>
+      <div id="empty" class="empty" style="display:none;">Không tìm thấy sản phẩm phù hợp.</div>
+
+      <div class="logic">
+        <h2 style="margin: 0 0 8px 0;">Giải thích logic tư duy</h2>
+        <ul style="margin:0;">
+          <li><strong>Tối ưu tìm kiếm</strong>: dùng filter tuyến tính $$O(n)$$ phù hợp danh sách nhỏ; có <em>debounce</em> để tránh lọc quá nhiều khi gõ nhanh.</li>
+          <li><strong>Tránh injection/XSS</strong>: không nhét trực tiếp input vào HTML; render bằng DOM + <code>textContent</code> (không dùng <code>innerHTML</code> với dữ liệu người dùng).</li>
+          <li><strong>Không phân biệt hoa thường</strong>: chuyển cả query và tên sản phẩm sang lowercase.</li>
+          <li><strong>UX</strong>: hiển thị số kết quả; nếu rỗng thì bật thông báo lỗi.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const products = [
+      { id: 1, name: "Laptop Dell XPS 13", price: 25990000, category: "Laptop" },
+      { id: 2, name: "iPhone 15 Pro", price: 30990000, category: "Phone" },
+      { id: 3, name: "Samsung Galaxy S24", price: 22990000, category: "Phone" },
+      { id: 4, name: "MacBook Air M2", price: 27990000, category: "Laptop" },
+      { id: 5, name: "iPad Pro 12.9", price: 34990000, category: "Tablet" },
+      { id: 6, name: "Tai nghe Sony WH-1000XM5", price: 7990000, category: "Audio" }
+    ];
+
+    const qEl = document.getElementById("q");
+    const listEl = document.getElementById("list");
+    const emptyEl = document.getElementById("empty");
+    const infoEl = document.getElementById("resultInfo");
+
+    function formatVND(n){
+      return n.toLocaleString("vi-VN") + " VNĐ";
+    }
+
+    function render(items){
+      listEl.innerHTML = "";
+      emptyEl.style.display = items.length ? "none" : "block";
+      infoEl.textContent = `Hiển thị ${items.length}/${products.length} sản phẩm`;
+
+      for (const p of items){
+        const card = document.createElement("div");
+        card.className = "product";
+
+        const h3 = document.createElement("h3");
+        h3.textContent = p.name;
+
+        const tag = document.createElement("span");
+        tag.className = "tag";
+        tag.textContent = p.category;
+
+        const price = document.createElement("div");
+        price.className = "price";
+        price.textContent = formatVND(p.price);
+
+        card.appendChild(h3);
+        card.appendChild(tag);
+        card.appendChild(document.createElement("div")).style.height = "8px";
+        card.appendChild(price);
+
+        listEl.appendChild(card);
+      }
+    }
+
+    function searchNow(){
+      const query = qEl.value.trim().toLowerCase();
+
+      // Input sanitation đơn giản: trim + giới hạn độ dài để tránh thao tác quá nặng
+      const safeQuery = query.slice(0, 80);
+
+      const filtered = safeQuery
+        ? products.filter(p => p.name.toLowerCase().includes(safeQuery))
+        : products;
+
+      render(filtered);
+    }
+
+    // debounce để tối ưu khi gõ
+    let t = null;
+    qEl.addEventListener("input", () => {
+      if (t) clearTimeout(t);
+      t = setTimeout(searchNow, 120);
+    });
+
+    render(products);
+  </script>
+</body>
+</html>

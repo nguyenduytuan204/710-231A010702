@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bài tập 03 - Countdown Timer</title>
+  <style>
+    :root{ --brand:#0b5ed7; --border:#e5e7eb; --muted:#6b7280; --bg:#f5f7fb; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family: Arial, Helvetica, sans-serif; background:var(--bg); }
+    .wrap{ max-width: 900px; margin: 0 auto; padding: 18px; }
+    .menu{
+      background: var(--brand); border-radius: 12px; overflow:hidden; margin: 18px 0;
+    }
+    .menu a{ color:#fff; text-decoration:none; font-weight:700; padding:12px 14px; display:inline-block; }
+    .menu a:hover{ background:#084298; }
+
+    .card{
+      background:#fff; border:1px solid var(--border); border-radius:12px;
+      padding: 18px; box-shadow: 0 6px 16px rgba(0,0,0,.05);
+      text-align:center;
+    }
+    #timer{
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin: 14px 0 10px 0;
+    }
+    .muted{ color: var(--muted); }
+    .controls{ display:flex; justify-content:center; gap: 10px; flex-wrap:wrap; margin-top: 12px; }
+    button{
+      background: var(--brand); color:#fff; border:0;
+      padding: 10px 14px; border-radius: 10px;
+      font-weight: 800; cursor:pointer;
+    }
+    button:hover{ background:#084298; }
+    button.secondary{ background:#111827; }
+    button.danger{ background:#ef4444; }
+
+    .urgent{
+      color:#b91c1c;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse{
+      0%,100%{ transform: scale(1); opacity: 1; }
+      50%{ transform: scale(1.02); opacity: .65; }
+    }
+
+    /* modal */
+    .modal{
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,.72);
+      z-index: 999;
+      padding: 18px;
+    }
+    .modal .box{
+      width: min(520px, 100%);
+      background: #fff;
+      border-radius: 14px;
+      padding: 18px;
+      text-align:left;
+      border: 1px solid var(--border);
+      box-shadow: 0 18px 40px rgba(0,0,0,.25);
+    }
+    .modal h2{ margin:0 0 8px 0; }
+    .modal p{ margin:0 0 12px 0; color:#374151; }
+    .modal .actions{ display:flex; justify-content:flex-end; gap: 10px; }
+
+    @media (max-width: 520px){
+      #timer{ font-size: 56px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="menu">
+      <a href="index.html">Trang chủ</a>
+      <a href="baitap01.html">Bài 01</a>
+      <a href="baitap02.html">Bài 02</a>
+      <a href="baitap03.html">Bài 03</a>
+      <a href="baitap14.html">Bài 14</a>
+    </div>
+
+    <section class="card">
+      <h1 style="margin:0;">Bài tập 03: Countdown 10 phút</h1>
+      <div class="muted" style="margin-top:6px;">
+        Khi còn dưới 1 phút sẽ có animation. Hết giờ hiển thị modal.
+      </div>
+
+      <div id="timer">10:00</div>
+      <div class="muted" id="status">Trạng thái: sẵn sàng</div>
+
+      <div class="controls">
+        <button id="btnStart">Start</button>
+        <button id="btnPause" class="secondary">Pause</button>
+        <button id="btnReset" class="danger">Reset 10:00</button>
+      </div>
+
+      <div style="margin-top:18px; text-align:left; border-top:1px solid var(--border); padding-top:12px;">
+        <h2 style="margin:0 0 8px 0;">Giải thích logic tư duy</h2>
+        <ul style="margin:0;">
+          <li><strong>setInterval</strong>: cập nhật mỗi 1 giây.</li>
+          <li><strong>Tránh memory leak</strong>: luôn <code>clearInterval()</code> trước khi tạo interval mới; dừng khi hết giờ.</li>
+          <li><strong>Animation dưới 1 phút</strong>: thêm class <code>urgent</code> cho timer.</li>
+          <li><strong>Deploy/Hosting</strong>: countdown chạy theo thời gian máy người dùng; nếu cần “đúng giờ” thì phải lấy thời gian từ server (API) để đồng bộ.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal" role="dialog" aria-modal="true">
+    <div class="box">
+      <h2>Hết thời gian!</h2>
+      <p>Bạn đã hết 10 phút. Interval đã được dừng để tránh chạy ngầm.</p>
+      <div class="actions">
+        <button id="btnClose" class="secondary">Đóng</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const timerEl = document.getElementById("timer");
+    const statusEl = document.getElementById("status");
+    const modalEl = document.getElementById("modal");
+
+    const START_SECONDS = 10 * 60;
+    let remaining = START_SECONDS;
+    let intervalId = null;
+
+    function pad2(n){ return String(n).padStart(2, "0"); }
+
+    function render(){
+      const mm = Math.floor(remaining / 60);
+      const ss = remaining % 60;
+      timerEl.textContent = `${pad2(mm)}:${pad2(ss)}`;
+
+      if (remaining <= 60) timerEl.classList.add("urgent");
+      else timerEl.classList.remove("urgent");
+    }
+
+    function stopInterval(){
+      if (intervalId !== null){
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    }
+
+    function tick(){
+      if (remaining <= 0){
+        stopInterval();
+        statusEl.textContent = "Trạng thái: đã hết giờ";
+        openModal();
+        return;
+      }
+      remaining -= 1;
+      render();
+    }
+
+    function start(){
+      // tránh tạo nhiều interval chồng nhau
+      if (intervalId !== null) return;
+
+      statusEl.textContent = "Trạng thái: đang chạy";
+      intervalId = setInterval(tick, 1000);
+    }
+
+    function pause(){
+      stopInterval();
+      statusEl.textContent = "Trạng thái: tạm dừng";
+    }
+
+    function reset(){
+      stopInterval();
+      remaining = START_SECONDS;
+      statusEl.textContent = "Trạng thái: sẵn sàng";
+      closeModal();
+      render();
+    }
+
+    function openModal(){
+      modalEl.style.display = "flex";
+    }
+    function closeModal(){
+      modalEl.style.display = "none";
+    }
+
+    document.getElementById("btnStart").addEventListener("click", start);
+    document.getElementById("btnPause").addEventListener("click", pause);
+    document.getElementById("btnReset").addEventListener("click", reset);
+    document.getElementById("btnClose").addEventListener("click", closeModal);
+
+    // click nền để đóng
+    modalEl.addEventListener("click", (e) => {
+      if (e.target === modalEl) closeModal();
+    });
+
+    // init
+    render();
+  </script>
+</body>
+</html>

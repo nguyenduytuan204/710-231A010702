@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trang chủ - 710-231A010702</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="profile">
+        <img src="images/avatar.jpg" alt="avatar">
+        <div>
+          <h1 style="margin:0;">Đề thi Lập trình Web - Đề số 1</h1>
+          <div class="muted" style="color:rgba(255,255,255,.9)">
+            MSSV: <strong>710-THAY-MSSV</strong> • Thời gian: 180 phút • Hình thức: Mở
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="menu">
+      <ul>
+        <li><a href="index.html">Trang chủ</a></li>
+        <li><a href="baitap01.html">Bài tập 01</a></li>
+        <li><a href="baitap02.html">Bài tập 02</a></li>
+        <li><a href="baitap03.html">Bài tập 03</a></li>
+        <li><a href="baitap14.html">Bài tập 14</a></li>
+        <li><a href="about.html">Giới thiệu</a></li>
+        <li><a href="contact.html">Liên hệ</a></li>
+      </ul>
+    </nav>
+
+    <div class="grid">
+      <section class="card">
+        <h2 style="margin-top:0;">Tổng quan</h2>
+        <p>
+          Dự án gồm 3 bài thực hành:
+          <strong>Danh sách sản phẩm + tìm kiếm</strong>,
+          <strong>Form đăng ký + validate + LocalStorage</strong>,
+          <strong>Countdown 10 phút + modal</strong>.
+        </p>
+        <p class="muted">
+          Lưu ý: Các file <code>baitap01.html</code>, <code>baitap02.html</code>, <code>baitap03.html</code>
+          đều chứa <strong>HTML/CSS/JS inline</strong> theo yêu cầu đề.
+        </p>
+
+        <h3>Phần lý thuyết (tóm tắt)</h3>
+        <ol>
+          <li><strong>position relative vs absolute</strong>:Sự khác biệt:<br>
+
+Relative: Phần tử dịch chuyển so với vị trí gốc nhưng vẫn giữ chỗ cũ trong luồng văn bản.<br>
+
+Absolute: Phần tử dịch chuyển so với cha gần nhất có position (khác static), không giữ chỗ cũ (bị tách khỏi document flow).<br>
+
+Layout Responsive: Kết hợp relative (cha) và absolute (con) để làm các nhãn (badge), icon trang trí.<br>
+
+Hosting & Tương thích: Trên các thiết bị khác nhau, nên dùng đơn vị %, vw, vh cho tọa độ top/left thay vì px để phần tử absolute tự điều chỉnh theo kích thước màn hình.</li>
+          <li><strong>Domain/Hosting/DNS</strong>: <br>Quy trình: Đăng ký Domain (Tên miền) $\rightarrow$ Thuê Hosting (Nơi chứa file) $\rightarrow$ Cấu hình DNS.
+            <br>Vai trò DNS: Chuyển đổi tên miền (dễ nhớ) thành địa chỉ IP máy chủ (số).
+            <br>Công cụ Deploy: GitHub Pages, Netlify (miễn phí, nhanh gọn cho web tĩnh).
+            <br>Rủi ro bảo mật: Nếu không cấu hình SSL (HTTPS), dữ liệu truyền từ trình duyệt lên hosting dễ bị đánh cắp qua tấn công Man-in-the-middle.</li>
+          <li><strong>let/const/var</strong>:<br>So sánh:var: Phạm vi hàm (function scope), bị hoisting (có thể dùng trước khi khai báo).let/const: Phạm vi khối {} (block scope), không bị hoisting lỗi. const dùng cho hằng số không thể gán lại.Lỗi thường gặp: Dùng var trong vòng lặp làm biến bị ghi đè toàn cục.
+            <br>Debug: Dùng Chrome DevTools (F12) $\rightarrow$ Tab Sources $\rightarrow$ Đặt Breakpoint để xem giá trị biến thay đổi qua từng dòng code.</li>
+          <li><strong>Event Delegation</strong>: <br>Khái niệm: Là kỹ thuật gắn 1 trình xử lý sự kiện duy nhất lên phần tử cha thay vì gắn cho từng phần tử con. Dựa trên cơ chế Event Bubbling (sự kiện nổi bọt).
+
+Ứng dụng: Xử lý click cho danh sách sản phẩm động (thêm/xóa liên tục).
+
+Lợi ích: * Hiệu suất: Giảm số lượng listener, tiết kiệm bộ nhớ.
+
+Quản lý: Tự động nhận sự kiện cho các thẻ con mới được thêm vào sau này bằng JS. <code>event.target</code>.</li>
+        </ol>
+
+        <a class="btn" href="baitap01.html">Bắt đầu Bài tập 01</a>
+      </section>
+
+      
+    </div>
+
+    <div class="footer">© 710-231A010702 </div>
+  </div>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

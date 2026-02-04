@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bài tập 14 - 710-MSSV</title>
+
+  <!-- ===== CSS GỘP ===== -->
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      background: #f3f4f6;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    /* ===== MENU ===== */
+    .menu ul {
+      list-style: none;
+      display: flex;
+      gap: 15px;
+      background: #4f46e5;
+      padding: 12px 20px;
+      border-radius: 10px;
+      flex-wrap: wrap;
+    }
+
+    .menu a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .menu a:hover {
+      text-decoration: underline;
+    }
+
+    /* ===== CARD CHUNG ===== */
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .muted {
+      color: #6b7280;
+    }
+
+    /* ===== GAME ===== */
+    .game-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .game-stats {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      background: #e5e7eb;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .card-game {
+      aspect-ratio: 3/4;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: 0.6s;
+    }
+
+    .card-game.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .front, .back {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2.5rem;
+      border-radius: 12px;
+      backface-visibility: hidden;
+    }
+
+    .back {
+      background: #6366f1;
+      color: white;
+    }
+
+    .front {
+      background: white;
+      transform: rotateY(180deg);
+      border: 3px solid #6366f1;
+    }
+
+    .controls {
+      text-align: center;
+    }
+
+    .btn {
+      padding: 10px 30px;
+      border: none;
+      border-radius: 10px;
+      background: #4f46e5;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    /* ===== MODAL ===== */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      text-align: center;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 25px;
+      color: #6b7280;
+    }
+
+    @media (max-width: 768px) {
+      .game-board {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- ===== MENU ===== -->
+    <nav class="menu">
+      <ul>
+        <li><a href="index.html">Trang chủ</a></li>
+        <li><a href="baitap01.html">Bài tập 01</a></li>
+        <li><a href="baitap02.html">Bài tập 02</a></li>
+        <li><a href="baitap03.html">Bài tập 03</a></li>
+        <li><a href="baitap14.html">Bài tập 14</a></li>
+        <li><a href="about.html">Giới thiệu</a></li>
+        <li><a href="contact.html">Liên hệ</a></li>
+      </ul>
+    </nav>
+
+    <!-- ===== NỘI DUNG BÀI 14 ===== -->
+    <section class="card" style="margin-top:18px;">
+      <div class="game-header">
+        <h1>🎮 Bài tập 14 – Game Ghép Đôi</h1>
+        <p class="muted">Lật thẻ và tìm các cặp giống nhau</p>
+      </div>
+
+      <div class="game-stats">
+        <div class="stat">Lượt: <span id="moves">0</span></div>
+        <div class="stat">Cặp: <span id="pairs">0/8</span></div>
+        <div class="stat">Thời gian: <span id="time">00:00</span></div>
+      </div>
+
+      <div class="game-board" id="board"></div>
+
+      <div class="controls">
+        <button class="btn" id="reset">🔄 Chơi lại</button>
+      </div>
+    </section>
+
+    <div class="footer">© 710-MSSV</div>
+  </div>
+
+  <!-- ===== MODAL ===== -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <h2>🎉 Hoàn thành!</h2>
+      <p>Lượt chơi: <b id="finalMoves"></b></p>
+      <p>Thời gian: <b id="finalTime"></b></p>
+      <button class="btn" onclick="startGame()">Chơi lại</button>
+    </div>
+  </div>
+
+  <!-- ===== JS GỘP ===== -->
+  <script>
+    const icons = ['🎮','🎯','🎲','🎪','🎨','🎭','🎸','🎺'];
+    let cards = [];
+    let flipped = [];
+    let moves = 0;
+    let matched = 0;
+    let seconds = 0;
+    let timer;
+
+    const board = document.getElementById('board');
+    const movesEl = document.getElementById('moves');
+    const pairsEl = document.getElementById('pairs');
+    const timeEl = document.getElementById('time');
+    const modal = document.getElementById('modal');
+
+    function startGame() {
+      board.innerHTML = '';
+      cards = [...icons, ...icons].sort(() => Math.random() - 0.5);
+      flipped = [];
+      moves = 0;
+      matched = 0;
+      seconds = 0;
+      clearInterval(timer);
+      modal.classList.remove('active');
+
+      timer = setInterval(() => {
+        seconds++;
+        const m = String(Math.floor(seconds/60)).padStart(2,'0');
+        const s = String(seconds%60).padStart(2,'0');
+        timeEl.textContent = `${m}:${s}`;
+      },1000);
+
+      cards.forEach(icon => {
+        const c = document.createElement('div');
+        c.className = 'card-game';
+        c.innerHTML = `
+          <div class="card-inner">
+            <div class="back">?</div>
+            <div class="front">${icon}</div>
+          </div>`;
+        c.onclick = () => flip(c, icon);
+        board.appendChild(c);
+      });
+
+      update();
+    }
+
+    function flip(card, icon) {
+      if (flipped.length === 2 || card.classList.contains('flipped')) return;
+      card.classList.add('flipped');
+      flipped.push({card, icon});
+
+      if (flipped.length === 2) {
+        moves++;
+        setTimeout(check, 800);
+      }
+      update();
+    }
+
+    function check() {
+      const [a,b] = flipped;
+      if (a.icon === b.icon) {
+        matched++;
+        if (matched === icons.length) win();
+      } else {
+        a.card.classList.remove('flipped');
+        b.card.classList.remove('flipped');
+      }
+      flipped = [];
+      update();
+    }
+
+    function update() {
+      movesEl.textContent = moves;
+      pairsEl.textContent = `${matched}/${icons.length}`;
+    }
+
+    function win() {
+      clearInterval(timer);
+      document.getElementById('finalMoves').textContent = moves;
+      document.getElementById('finalTime').textContent = timeEl.textContent;
+      modal.classList.add('active');
+    }
+
+    document.getElementById('reset').onclick = startGame;
+    startGame();
+  </script>
+</body>
+</html>
